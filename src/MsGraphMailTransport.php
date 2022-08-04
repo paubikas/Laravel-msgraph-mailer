@@ -21,7 +21,6 @@ use Symfony\Contracts\HttpClient\ResponseInterface;
 
 class MsGraphMailTransport extends AbstractApiTransport
 {
-
     /**
      * @var string
      */

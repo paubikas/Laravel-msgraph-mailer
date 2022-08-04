@@ -1,13 +1,11 @@
 <?php
 
-
 namespace LaravelMsGraphMailer;
 
 use Illuminate\Support\ServiceProvider;
 use LaravelMsGraphMail\Exceptions\CouldNotSendMail;
 
 class MsGraphMailServiceProvider extends ServiceProvider {
-
     /**
      * Boot any application services.
      * @return void
@@ -22,5 +20,4 @@ class MsGraphMailServiceProvider extends ServiceProvider {
             return new MsGraphMailTransport($config);
         });
     }
-
 }
