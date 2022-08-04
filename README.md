@@ -29,6 +29,16 @@ Add the configuration to your mail.php config file:
 ]
 ```
 
+Add the configuration to your ENV file:
+
+```env
+MAIL_MAILER=microsoft-graph
+MAIL_MSGRAPH_TENANT=
+MAIL_MSGRAPH_CLIENT=
+MAIL_MSGRAPH_SECRET=
+MAIL_MSGRAPH_SAVE_TO_SENT_ITEMS=false
+```
+
 Valid values for `tenant` are your tenant identifier (work & school accounts) or `common` for personal accounts.
 
 **Note:** This package relies on [Laravel's Cache](https://laravel.com/docs/cache) interface for caching access tokens.
