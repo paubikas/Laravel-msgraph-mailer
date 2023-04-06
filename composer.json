@@ -1,7 +1,7 @@
 {
     "name": "paubikas/laravel-msgraph-mailer",
     "type": "library",
-    "description": "Laravel 9 mail driver to send emails using Microsoft Graph, supporting both personal accounts as well as work/school accounts (365/Exchange)",
+    "description": "Laravel 9/10 mail driver to send emails using Microsoft Graph, supporting both personal accounts as well as work/school accounts (365/Exchange)",
     "keywords": [
       "laravel",
       "mail",
