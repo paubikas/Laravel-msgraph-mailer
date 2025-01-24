@@ -21,7 +21,7 @@
       "php": ">=8.2",
       "ext-json": "*",
       "guzzlehttp/guzzle": "^7.4.5",
-      "symfony/http-client": "^6.0|v7.0",
+      "symfony/http-client": "v7.2.2",
       "symfony/mailer": "^5.4|^6.0|^7.0",
       "illuminate/support": "^10.0 | ^11.0",
       "laravel/framework": "^10.0 | ^11.0"
