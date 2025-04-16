@@ -1,58 +1,57 @@
 {
-    "name": "paubikas/laravel-msgraph-mailer",
-    "type": "library",
-    "description": "Laravel 9/10 mail driver to send emails using Microsoft Graph, supporting both personal accounts as well as work/school accounts (365/Exchange)",
-    "keywords": [
-      "laravel",
-      "mail",
-      "exchange",
-      "365",
-      "microsoft",
-      "graph"
-    ],
-    "license": "MIT",
-    "authors": [
-      {
-        "name": "Paulius Bikauskas",
-        "homepage": "https://github.com/paubikas"
-      }
-    ],
-    "require": {
-      "php": ">=8.2",
-      "ext-json": "*",
-      "guzzlehttp/guzzle": "^7.4.5",
-      "symfony/http-client": "v7.2.2",
-      "symfony/mailer": "^5.4|^6.0|^7.0",
-      "illuminate/support": "^10.0 | ^11.0",
-      "laravel/framework": "^10.0 | ^11.0"
-    },
-    "autoload": {
-      "psr-4": {
-        "LaravelMsGraphMailer\\": "src/"
-      }
-    },
-    "autoload-dev": {
-      "psr-4": {
-        "LaravelMsGraphMailer\\Test\\": "tests/"
-      }
-    },
-    "require-dev": {
-      "phpunit/phpunit": "^9.1 | ^10.0",
-      "mockery/mockery": "^1.3",
-      "orchestra/testbench": "^8.0"
-    },
-    "scripts": {
-      "test": "phpunit",
-      "test:coverage": "phpunit --coverage-text --coverage-clover=coverage.clover"
-    },
-    "extra": {
-      "laravel": {
-        "providers": [
-          "LaravelMsGraphMailer\\MsGraphMailServiceProvider"
-        ]
-      }
-    },
-    "minimum-stability": "dev",
-    "prefer-stable": true
-  }
-  
+  "name": "paubikas/laravel-msgraph-mailer",
+  "type": "library",
+  "description": "Laravel 9/10/11/12 mail driver to send emails using Microsoft Graph, supporting both personal accounts as well as work/school accounts (365/Exchange)",
+  "keywords": [
+    "laravel",
+    "mail",
+    "exchange",
+    "365",
+    "microsoft",
+    "graph"
+  ],
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Paulius Bikauskas",
+      "homepage": "https://github.com/paubikas"
+    }
+  ],
+  "require": {
+    "php": ">=8.2",
+    "ext-json": "*",
+    "guzzlehttp/guzzle": "^7.4.5",
+    "symfony/http-client": "^7.0",
+    "symfony/mailer": "^5.4|^6.0|^7.0",
+    "illuminate/support": "^10.0 | ^11.0 | ^12.0",
+    "laravel/framework": "^10.0 | ^11.0 | ^12.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "LaravelMsGraphMailer\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "LaravelMsGraphMailer\\Test\\": "tests/"
+    }
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^9.1 | ^10.0",
+    "mockery/mockery": "^1.3",
+    "orchestra/testbench": "^8.0"
+  },
+  "scripts": {
+    "test": "phpunit",
+    "test:coverage": "phpunit --coverage-text --coverage-clover=coverage.clover"
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "LaravelMsGraphMailer\\MsGraphMailServiceProvider"
+      ]
+    }
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true
+}

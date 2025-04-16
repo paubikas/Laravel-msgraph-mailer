@@ -18,6 +18,7 @@ use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
+use Throwable;
 
 class MsGraphMailTransport extends AbstractApiTransport
 {
@@ -50,8 +51,9 @@ class MsGraphMailTransport extends AbstractApiTransport
         parent::__construct($client, $dispatcher, $logger);
     }
 
-    protected function doSendApi(SentMessage $sentMessage, Email $email, Envelope $envelope): ResponseInterface {
-//        $this->beforeSendPerformed($message);
+    protected function doSendApi(SentMessage $sentMessage, Email $email, Envelope $envelope): ResponseInterface
+    {
+        //        $this->beforeSendPerformed($message);
         $rawPayload = $this->getPayload($email, $envelope);
 
         $url = str_replace('{from}', urlencode($envelope->getSender()->getAddress()), $this->apiEndpoint);
@@ -66,7 +68,6 @@ class MsGraphMailTransport extends AbstractApiTransport
 
         try {
             $statusCode = $response->getStatusCode();
-
         } catch (BadResponseException $e) {
             // The API responded with 4XX or 5XX error
             if ($e->hasResponse()) $response = json_decode((string)$e->getResponse()->getBody());
@@ -80,7 +81,8 @@ class MsGraphMailTransport extends AbstractApiTransport
         return $response;
     }
 
-    public function __toString(): string {
+    public function __toString(): string
+    {
         return $this->apiEndpoint;
     }
 
@@ -92,7 +94,8 @@ class MsGraphMailTransport extends AbstractApiTransport
      * @param Envelope $envelope
      * @return array
      */
-    protected function getPayload(Email $email, Envelope $envelope): array {
+    protected function getPayload(Email $email, Envelope $envelope): array
+    {
         $from = $envelope->getSender();
         $priority = $email->getPriority();
         $html = $email->getHtmlBody();
@@ -122,7 +125,8 @@ class MsGraphMailTransport extends AbstractApiTransport
      * @param array|string $recipients
      * @return array
      */
-    protected function toRecipientCollection($recipients): array {
+    protected function toRecipientCollection($recipients): array
+    {
         $collection = [];
 
         // If the provided list is empty
@@ -144,8 +148,8 @@ class MsGraphMailTransport extends AbstractApiTransport
             return $collection;
         }
 
-        foreach($recipients as $recipientKey => $recipient) {
-            if($recipient instanceof Address) {
+        foreach ($recipients as $recipientKey => $recipient) {
+            if ($recipient instanceof Address) {
                 $collection[] = [
                     'emailAddress' => [
                         'name' => $recipient->getName(),
@@ -174,7 +178,7 @@ class MsGraphMailTransport extends AbstractApiTransport
                 if ($html) {
                     $filename = $headers->getHeaderParameter('Content-Disposition', 'filename');
                     $new = basename($filename);
-                    $html = str_replace('cid:'.$filename, 'cid:'.$new, $html);
+                    $html = str_replace('cid:' . $filename, 'cid:' . $new, $html);
                     $p = new \ReflectionProperty($attachment, 'filename');
                     $p->setAccessible(true);
                     $p->setValue($attachment, $new);
@@ -188,7 +192,6 @@ class MsGraphMailTransport extends AbstractApiTransport
                     ];
                 }
                 $inlines[] = $attachment;
-
             } else {
                 $attachments[] = [
                     "@odata.type" => "#microsoft.graph.fileAttachment",
@@ -208,7 +211,8 @@ class MsGraphMailTransport extends AbstractApiTransport
      * @param $attachments
      * @return array
      */
-    protected function toAttachmentCollection($attachments): array {
+    protected function toAttachmentCollection($attachments): array
+    {
         $collection = [];
 
         foreach ($attachments as $attachment) {
@@ -225,7 +229,6 @@ class MsGraphMailTransport extends AbstractApiTransport
                 '@odata.type' => '#microsoft.graph.fileAttachment',
                 'isInline' => $attachment instanceof Swift_Mime_EmbeddedFile,
             ];
-
         }
 
         return $collection;
@@ -237,7 +240,8 @@ class MsGraphMailTransport extends AbstractApiTransport
      * @throws CouldNotGetToken
      * @throws CouldNotReachService
      */
-    protected function getHeaders(): array {
+    protected function getHeaders(): array
+    {
         return [
             'Accept' => 'application/json',
             'Content-Type' => 'application/json',
@@ -251,7 +255,8 @@ class MsGraphMailTransport extends AbstractApiTransport
      * @throws CouldNotReachService
      * @throws CouldNotGetToken
      */
-    protected function getAccessToken(): string {
+    protected function getAccessToken(): string
+    {
         try {
             return Cache::remember('mail-msgraph-accesstoken', 45, function () {
                 $url = str_replace('{tenant}', $this->tenant_id ?? 'common', $this->tokenEndpoint);
@@ -278,5 +283,4 @@ class MsGraphMailTransport extends AbstractApiTransport
             throw CouldNotReachService::unknownError();
         }
     }
-
 }
