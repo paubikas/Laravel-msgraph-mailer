@@ -5,6 +5,7 @@ namespace LaravelMsGraphMailer;
 use GuzzleHttp\Exception\BadResponseException;
 use GuzzleHttp\Exception\ConnectException;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use LaravelMsGraphMailer\Exceptions\CouldNotGetToken;
 use LaravelMsGraphMailer\Exceptions\CouldNotReachService;
 use LaravelMsGraphMailer\Exceptions\CouldNotSendMail;
@@ -16,8 +17,10 @@ use Symfony\Component\Mailer\SentMessage;
 use Symfony\Component\Mailer\Transport\AbstractApiTransport;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
+use Symfony\Contracts\HttpClient\Exception\ExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
+use Throwable;
 
 class MsGraphMailTransport extends AbstractApiTransport
 {
@@ -36,48 +39,48 @@ class MsGraphMailTransport extends AbstractApiTransport
     private string $secret;
     private string $tenant_id;
     private ?string $client_id;
+    private ?bool $saveToSentItems = true;
 
     protected $http;
 
-    public function __construct($config, HttpClientInterface $client = null, EventDispatcherInterface $dispatcher = null, LoggerInterface $logger = null)
+    public function __construct($config, ?HttpClientInterface $client = null, ?EventDispatcherInterface $dispatcher = null, ?LoggerInterface $logger = null)
     {
-        $this->secret = $config['secret'];
-        $this->tenant_id = $config['tenant'];
-        $this->client_id = $config['client'];
-        $this->saveToSentItems = $config['saveToSentItems'];
+        $this->secret = $config['secret'] ?? '';
+        $this->tenant_id = $config['tenant'] ?? '';
+        $this->client_id = $config['client'] ?? null;
+        $this->saveToSentItems = $config['saveToSentItems'] ?? true;
         $this->http = $client ?? HttpClient::create();
 
-        parent::__construct($client, $dispatcher, $logger);
+        parent::__construct($this->http, $dispatcher, $logger);
     }
 
-    protected function doSendApi(SentMessage $sentMessage, Email $email, Envelope $envelope): ResponseInterface {
-//        $this->beforeSendPerformed($message);
+    protected function doSendApi(SentMessage $sentMessage, Email $email, Envelope $envelope): ResponseInterface
+    {
         $rawPayload = $this->getPayload($email, $envelope);
 
-        $url = str_replace('{from}', urlencode($envelope->getSender()->getAddress()), $this->apiEndpoint);
+        // Ensure sender is set and valid
+        $sender = $envelope->getSender();
+        if (!$sender || !$sender->getAddress()) {
+            throw CouldNotSendMail::serviceRespondedWithError('InvalidSender', 'Sender address is missing.');
+        }
 
-        $response = $this->http->request('POST', $url, [
-            'headers' => $this->getHeaders(),
-            'json' => [
-                'message' => $rawPayload,
-                'saveToSentItems' => ($this->saveToSentItems) ? $this->saveToSentItems : true
-            ]
-        ]);
+        $url = str_replace('{from}', urlencode($sender->getAddress()), $this->apiEndpoint);
 
         try {
-            $statusCode = $response->getStatusCode();
-
-        } catch (BadResponseException $e) {
-            // The API responded with 4XX or 5XX error
-            if ($e->hasResponse()) $response = json_decode((string)$e->getResponse()->getBody());
-            throw CouldNotSendMail::serviceRespondedWithError($response->error->code ?? 'Unknown', $response->error->message ?? 'Unknown error');
-        } catch (ConnectException $e) {
-            // A connection error (DNS, timeout, ...) occurred
-            throw CouldNotReachService::networkError();
-        } catch (Throwable $e) {
-            throw CouldNotReachService::unknownError();
+            $response = $this->http->request('POST', $url, [
+                'headers' => $this->getHeaders(),
+                'json' => [
+                    'message' => $rawPayload,
+                    'saveToSentItems' => ($this->saveToSentItems !== null) ? $this->saveToSentItems : true
+                ]
+            ]);
+            
+            $response->getContent();
+            return $response;
+        } catch (ExceptionInterface $e) {
+            throw CouldNotSendMail::serviceRespondedWithError('Exception', $e->getMessage());
         }
-        return $response;
+        
     }
 
     public function __toString(): string {
@@ -98,8 +101,9 @@ class MsGraphMailTransport extends AbstractApiTransport
         $html = $email->getHtmlBody();
 
         [$attachments, $html] = $this->prepareAttachments($email, $html);
-
-        return array_filter([
+        $customHeaders = $this->getCustomHeaders($email);
+        
+        $filered = array_filter([
             'subject' => $email->getSubject(),
             'sender' => $this->toRecipientCollection([$from])[0],
             'from' => $this->toRecipientCollection([$from])[0],
@@ -113,7 +117,10 @@ class MsGraphMailTransport extends AbstractApiTransport
                 'content' => $html,
             ],
             'attachments' => $attachments,
+            ...$customHeaders
         ]);
+       
+        return $filered;
     }
 
     /**
@@ -223,7 +230,7 @@ class MsGraphMailTransport extends AbstractApiTransport
                 'contentBytes' => base64_encode($attachment->getBody()),
                 'size' => strlen($attachment->getBody()),
                 '@odata.type' => '#microsoft.graph.fileAttachment',
-                'isInline' => $attachment instanceof Swift_Mime_EmbeddedFile,
+                'isInline' => $attachment instanceof Swift_Mime_EmbeddedFil,
             ];
 
         }
@@ -279,4 +286,54 @@ class MsGraphMailTransport extends AbstractApiTransport
         }
     }
 
+    protected function getCustomHeaders(Email $email): array
+    {
+        $customHeaders = [];
+        
+        $currentHeaders = $email->getHeaders();
+        
+        $standartHeaders = [
+            'from',
+            'to',
+            'cc',
+            'bcc',
+            'subject',
+            'reply-to',
+            'date',
+            'message-id',
+            'tags',
+            'metadata'
+        ];
+        
+        foreach ($currentHeaders->all() as $headerIndex => $header) { 
+            if (!in_array(strtolower($headerIndex), $standartHeaders)) {
+                if($header->getName() == 'internetMessageHeaders') {
+                    $customHeaders['internetMessageHeaders'] = $this->toInternetMessageHeaders($header);
+                }
+                else {
+                    $customHeaders[$header->getName()] = $header->getBody();
+                }
+               
+            }
+        }
+        
+        return $customHeaders;
+    }
+
+    protected function toInternetMessageHeaders($header): array
+    {
+        
+        $headers = [];
+        $convertedHeader = json_decode($header->getBody(), true);
+    
+        foreach ($convertedHeader as $key => $value) {
+            
+            $headers[] = [
+                'name' => $key,
+                'value' => (string) $value
+            ];
+        }
+        
+        return $headers;
+    }
 }
