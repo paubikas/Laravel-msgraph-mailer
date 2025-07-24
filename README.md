@@ -3,7 +3,7 @@
 This package makes it easy to send emails from your personal, work or school account using Microsoft's Graph API,
 allowing you to benefit from HTTP instead of SMTP with Laravel.
 
-Inspired by wapacro/laravel-msgraph-mail and fixed to work with Laravel 9
+Inspired by wapacro/laravel-msgraph-mail and fixed to work with Laravel 12
 ## Installation
 
 Install the package using composer:
@@ -42,7 +42,22 @@ Valid values for `tenant` are your tenant identifier (work & school accounts) or
 **Note:** This package relies on [Laravel's Cache](https://laravel.com/docs/cache) interface for caching access tokens.
 Make sure to configure it properly, too!
 
+### Internal Message Headers and Other Microsoft Graph Custom Headers
 
+To include internal message headers when sending an email via Microsoft Graph, you should use the envelope() function along with the using callback. This allows you to pass custom headers, including internal ones. You can also add other supported headers. For a full list of available headers, refer to the official documentation: [Microsoft Graph Message Resource](https://learn.microsoft.com/en-us/graph/api/resources/message?view=graph-rest-1.0).
+
+Here’s an example of how to add headers:
+```php
+    using: [
+        function (Email $email) {
+            $email->getHeaders()->addHeader('isReadReceiptRequested', 'true');
+            $email->getHeaders()->addHeader('isDeliveryReceiptRequested', 'true');
+            $email->getHeaders()->addHeader('internetMessageHeassders', json_encode([
+                'X-Test-ID' => 'TestID',
+            ]));
+        }
+    ]
+```
 ### Getting the credentials
 
 To get the necessary client ID and secret you'll need to register your application and grant it the required
