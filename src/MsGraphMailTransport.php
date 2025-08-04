@@ -74,13 +74,20 @@ class MsGraphMailTransport extends AbstractApiTransport
                     'saveToSentItems' => ($this->saveToSentItems !== null) ? $this->saveToSentItems : true
                 ]
             ]);
-            
-            $response->getContent();
-            return $response;
+
+            $statusCode = $response->getStatusCode();
+            if ($statusCode >= 400) {
+                $responseBody = $response->getContent(false);
+                Log::error('Failed to send email via Microsoft Graph', [
+                    'status_code' => $statusCode,
+                    'response_body' => $responseBody,
+                ]);
+                throw CouldNotSendMail::serviceRespondedWithError('HTTP Error', "HTTP {$statusCode} error: {$responseBody}");
+            }
         } catch (ExceptionInterface $e) {
             throw CouldNotSendMail::serviceRespondedWithError('Exception', $e->getMessage());
         }
-        
+        return $response;
     }
 
     public function __toString(): string {
@@ -287,33 +294,12 @@ class MsGraphMailTransport extends AbstractApiTransport
     }
 
     protected function getCustomHeaders(Email $email): array
-    {
-        $customHeaders = [];
-        
+    {   
         $currentHeaders = $email->getHeaders();
         
-        $standartHeaders = [
-            'from',
-            'to',
-            'cc',
-            'bcc',
-            'subject',
-            'reply-to',
-            'date',
-            'message-id',
-            'tags',
-            'metadata'
-        ];
-        
-        foreach ($currentHeaders->all() as $headerIndex => $header) { 
-            if (!in_array(strtolower($headerIndex), $standartHeaders)) {
-                if($header->getName() == 'internetMessageHeaders') {
-                    $customHeaders['internetMessageHeaders'] = $this->toInternetMessageHeaders($header);
-                }
-                else {
-                    $customHeaders[$header->getName()] = $header->getBody();
-                }
-               
+        foreach ($currentHeaders->all() as $headerIndex => $header) {  
+            if($header->getName() == 'internetMessageHeaders') {
+                $customHeaders['internetMessageHeaders'] = $this->toInternetMessageHeaders($header);
             }
         }
         
