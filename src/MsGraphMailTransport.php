@@ -296,7 +296,7 @@ class MsGraphMailTransport extends AbstractApiTransport
     protected function getCustomHeaders(Email $email): array
     {   
         $currentHeaders = $email->getHeaders();
-        
+        $$customHeaders = [];
         foreach ($currentHeaders->all() as $headerIndex => $header) {  
             if($header->getName() == 'internetMessageHeaders') {
                 $customHeaders['internetMessageHeaders'] = $this->toInternetMessageHeaders($header);
