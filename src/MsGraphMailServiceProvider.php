@@ -4,7 +4,7 @@
 namespace LaravelMsGraphMailer;
 
 use Illuminate\Support\ServiceProvider;
-use LaravelMsGraphMail\Exceptions\CouldNotSendMail;
+use LaravelMsGraphMailer\Exceptions\CouldNotSendMail;
 
 class MsGraphMailServiceProvider extends ServiceProvider {
 
