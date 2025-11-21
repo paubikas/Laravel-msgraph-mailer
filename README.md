@@ -20,7 +20,7 @@ Add the configuration to your mail.php config file:
         'transport'       => 'microsoft-graph',
         'tenant'          => env('MAIL_MSGRAPH_TENANT', 'common'),
         'client'          => env('MAIL_MSGRAPH_CLIENT'),
-        'secret'          => env('MAIL_MSGRAPH_SECRET')
+        'secret'          => env('MAIL_MSGRAPH_SECRET'),
         'saveToSentItems' => env('MAIL_MSGRAPH_SAVE_TO_SENT_ITEMS', false)
     ]
     // ...
