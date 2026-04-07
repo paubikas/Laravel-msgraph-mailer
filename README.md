@@ -3,7 +3,7 @@
 This package makes it easy to send emails from your personal, work or school account using Microsoft's Graph API,
 allowing you to benefit from HTTP instead of SMTP with Laravel.
 
-Inspired by wapacro/laravel-msgraph-mail and fixed to work with Laravel 12
+Inspired by wapacro/laravel-msgraph-mail and fixed to work with Laravel 12/13
 ## Installation
 
 Install the package using composer:
